@@ -140,3 +140,52 @@ networks:
 |  **ADMIN_USERNAME**   |         web登录账号          |          admin           |
 |  **ADMIN_PASSWORD**   |         web登录密码          |          admin           |
 | **ENV_UPDATE_CONFIG** | 启用环境变量自动更新配置文件 |           true           |
+
+## 路由配置
+在 /data/openvpn/server.conf 中添加如下配置，才可以正常访问相应子网 
+```bash
+push "route 172.18.2.0 255.255.255.0" 
+```
+```bash
+port 2222
+proto tcp
+dev tun
+persist-key
+persist-tun
+keepalive 10 120
+topology subnet
+server 10.8.0.0 255.255.255.0
+#push "dhcp-option DNS 8.8.8.8"
+#push "dhcp-option DNS 8.8.4.4"
+#push "redirect-gateway def1 ipv6 bypass-dhcp"
+push "route 172.18.2.0 255.255.255.0"
+dh none
+tls-groups prime256v1
+tls-crypt /data/pki/tc.key
+crl-verify /data/pki/crl.pem
+ca /data/pki/ca.crt
+cert /data/pki/issued/server_j8W0n3MwoCLYiyft.crt
+key /data/pki/private/server_j8W0n3MwoCLYiyft.key
+auth SHA256
+cipher AES-128-GCM
+data-ciphers AES-128-GCM
+tls-server
+tls-version-min 1.2
+tls-cipher TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256
+auth-user-pass-verify /usr/lib/openvpn/plugins/openvpn-auth via-env
+client-disconnect /usr/bin/docker-entrypoint.sh
+client-connect /usr/bin/docker-entrypoint.sh
+script-security 3
+status /data/openvpn-status.log
+client-config-dir /data/ccd
+keepalive 10 60
+duplicate-cn
+client-to-client
+max-clients 200
+management 127.0.0.1 7505
+verb 2
+setenv ovpn_data /data
+setenv auth_api http://127.0.0.1:8833/login
+setenv ovpn_auth_api http://127.0.0.1:8833/ovpn/login
+setenv ovpn_history_api http://127.0.0.1:8833/ovpn/history
+```
